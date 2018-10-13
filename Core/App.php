@@ -36,48 +36,42 @@ if (!class_exists('App')) {
             return call_user_func($name, $arguments);
         }
 
-        /**
-         * @param string $message
-         * @param int $code
-         * @param mixed $data
-         */
-        static function returnSuccess(string $message = "success", int $code = 200, mixed $data)
-        {
-            print_r($data);
-        }
 
         /**
          * @param string $file
          * @param array $param
          * @return View
          */
-        public function view(string $file, array $param)
+        public function view(string $file, array $param = [])
         {
             return (new View($file, $param));
         }
 
-        public function x($data)
-        {
-            return $data['a'] * 100;
-        }
-
         public function run()
         {
-            var_dump($this->route->getRoute());
-            var_dump($this->uri->getUriString());
-die();
-//            $new = new $this->uri->getController();
+            if (!$this->route->class) {
+                $this->view('error_404');
+            }
 
-            var_dump($this->uri->getArgs());
-            var_dump($this->input->post());
-//            var_dump(VIEW_PATH);
-//            $x = new Uri();
-//            var_dump($x);
-//            var_dump($x->getArgs());
-//            load_class($this->cfg['$this->uri->getArgs()'], APP_PATH . 'Controller');
-//            $class = $this->rtr->class;
-//            var_dump($class);
-//            var_dump($this->uri->getArgs());
+            $class = trim(APP_PATH, '/') . '\\' . 'Controller' . '\\' . $this->route->class;
+
+            if (!class_exists($class)) {
+                $this->view('error_404');
+            }
+            $class = new $class();
+            $offset = stripos($this->route->action, $this->route->class);
+            if ($offset !== FALSE) {
+                $function = trim(substr($this->route->action, $offset + strlen($this->route->class)), '/');
+            } else {
+                $function = 'index';
+            }
+
+            if (in_array($function, get_class_methods($class))) {
+                $return = call_user_func_array([$class, $function], is_array($this->uri->getArgs()) ? $this->uri->getArgs() : []);
+                return $return;
+            } else {
+                $this->view('error_404');
+            }
         }
     }
 }

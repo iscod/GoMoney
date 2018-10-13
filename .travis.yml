@@ -1,0 +1,13 @@
+language: php
+php:
+  - 7.0
+  - 7.1
+  - 7.2
+install:
+  - composer
+  - pecl
+before_script:
+  - composer install
+  - echo "extension=redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+  - echo "extension=memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+script: php index.php

@@ -13,9 +13,9 @@ class Router
     public $routes = [];
 
     /**
-     * @var string
+     * @var Uri
      */
-    public $uri = '';
+    public $uri = NULL;
 
     /**
      * @var string
@@ -28,6 +28,21 @@ class Router
     public $method = 'GET';
 
     /**
+     * @var string
+     */
+    public $class = '';
+
+    /**
+     * @var string
+     */
+    public $directory = '';
+
+    /**
+     * @var array
+     */
+    public $route = [];
+
+    /**
      * Router constructor.
      */
     public function __construct()
@@ -36,35 +51,12 @@ class Router
             include CONFIG_PATH . 'routes.php';
         }
 
-        $this->uri = new Uri();
-
-        $this->_setRouting();
-
-
-//        $this->enable_query_strings = ( ! is_cli() && $this->config->item('enable_query_strings') === TRUE);
-//
-//        // If a directory override is configured, it has to be set before any dynamic routing logic
-//        is_array($routing) && isset($routing['directory']) && $this->set_directory($routing['directory']);
-//        $this->_set_routing();
-//
-//        // Set any routing overrides that may exist in the main index file
-//        if (is_array($routing))
-//        {
-//            empty($routing['controller']) OR $this->set_class($routing['controller']);
-//            empty($routing['function'])   OR $this->set_method($routing['function']);
-//        }
-//
-//        log_message('info', 'Router Class Initialized');
-
+        $this->_parseRoutes();
     }
 
-    /**
-     * @param string $uri
-     * @return $this
-     */
-    public function setUri(string $uri)
+    public function setClass(string $class)
     {
-        $this->uri = strtolower($uri);
+        $this->class = str_replace(array('/', '.'), '', $class);
         return $this;
     }
 
@@ -74,12 +66,17 @@ class Router
      */
     public function setMethod(string $method)
     {
-        $method = strtoupper($method);
-        if (in_array($method, ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'CONNECT'])) {
-            $this->method = $method;
-        } else {
-            $this->method = 'GET';
-        }
+        $this->method = $method;
+        return $this;
+    }
+
+    /**
+     * @param string $uri
+     * @return $this
+     */
+    public function setUri(string $uri)
+    {
+        $this->uri = strtolower($uri);
         return $this;
     }
 
@@ -94,87 +91,115 @@ class Router
     }
 
     /**
-     * addRoute
+     * @return array
      */
-    public function addRoute()
-    {
-        if ($this->uri && $this->action) {
-            if (is_array($this->method)) {
-                foreach ($this->method as $verb) {
-                    $this->routes[$verb . $this->uri] = ['method' => $verb, 'uri' => $this->uri, 'action' => $this->action];
-                }
-            } else {
-                $this->routes[$this->method . $this->uri] = ['method' => $this->method, 'uri' => $this->uri, 'action' => $this->action];
-            }
-        }
-    }
-
-    public function getRoute()
+    public function getRoutes()
     {
         return $this->routes;
     }
 
     /**
-     *
+     * @param null $key
+     * @return array|mixed|string
      */
-    protected function _setRouting()
+    public function getRoute($key = NULL)
     {
-        if ($this->uri->getUriString() !== '') {
-            $this->_parseRoutes();
-        }else{
-//            $this->setDefalueController();
+        if ($key === NULL) {
+            return $this->route;
+        } else {
+            return $this->route[$key] ?? '';
         }
+
+    }
+
+    /**
+     * addRoute
+     * @return bool
+     */
+    public function addRoute()
+    {
+        $this->action = $this->_validateAction($this->action);
+
+        if ($this->uri && $this->action) {
+            if (is_array($this->method)) {
+                foreach ($this->method as $verb) {
+                    $this->routes[$verb . $this->uri] = [
+                        'method' => $verb,
+                        'uri' => $this->uri,
+                        'action' => $this->action,
+                        'directory' => $this->directory
+                    ];
+                }
+            } else {
+                $this->routes[$this->method . $this->uri] = [
+                    'method' => $this->method,
+                    'uri' => $this->uri,
+                    'action' => $this->action,
+                    'directory' => $this->directory
+                ];
+            }
+        }
+
+        return TRUE;
     }
 
     protected function _parseRoutes()
     {
-
-    }
-
-    protected function _parse_routes()
-    {
-        // Turn the segment array into a URI string
-        $uri = implode('/', $this->uri->segments);
-
-        // Get HTTP verb
-        $http_verb = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'cli';
-
-        // Loop through the route array looking for wildcards
-        foreach ($this->routes as $key => $val) {
-            // Check if route format is using HTTP verbs
-            if (is_array($val)) {
-                $val = array_change_key_case($val, CASE_LOWER);
-                if (isset($val[$http_verb])) {
-                    $val = $val[$http_verb];
-                } else {
-                    continue;
-                }
-            }
-
-            // Convert wildcards to RegEx
-            $key = str_replace(array(':any', ':num'), array('[^/]+', '[0-9]+'), $key);
-
-            // Does the RegEx match?
-            if (preg_match('#^' . $key . '$#', $uri, $matches)) {
-                // Are we using callbacks to process back-references?
-                if (!is_string($val) && is_callable($val)) {
-                    // Remove the original string from the matches array.
-                    array_shift($matches);
-
-                    // Execute the callback using the values in matches as its parameters.
-                    $val = call_user_func_array($val, $matches);
-                } // Are we using the default routing method for back-references?
-                elseif (strpos($val, '$') !== FALSE && strpos($key, '(') !== FALSE) {
-                    $val = preg_replace('#^' . $key . '$#', $val, $uri);
-                }
-
-                $this->_set_request(explode('/', $val));
-                return;
-            }
+        $uri = new Uri();
+        $method = strtoupper($uri->getMethod());
+        $uri = trim($uri->getUri(), '/');
+        if ($uri === '') {
+            $this->route = $this->routes['default_route'];
+        } else {
+            $this->route = $this->routes[$method . $uri] ?? '';
         }
 
-        // If we got this far it means we didn't encounter a
-        // matching route so we'll set the site default route
-        $this->_set_request(array_values($this->uri->segments));
+        $action = $this->route['action'] ?? '';
+        $action = explode('/', trim($action, '/'));
+        $this->setUri($this->route['uri'] ?? '');
+        $this->setClass($action[0] ?? '');
+        $this->setAction($this->route['action'] ?? '');
+        $this->setMethod($this->route['method'] ?? '');
+    }
+
+    public function addDefaultRoute()
+    {
+        $this->routes['default_route'] = [
+            'method' => $this->method,
+            'uri' => '',
+            'action' => $this->action,
+            'directory' => ''
+        ];
+    }
+
+    /**
+     * @param string $action
+     * @return array|string
+     */
+    protected function _validateAction(string $action)
+    {
+        $action = explode('/', trim($action, '/'));
+
+        $c = count($action);
+
+        while ($c-- > 0) {
+            $test_file = ucfirst($action[0]);
+            if (!file_exists(APP_PATH . 'Controller/' . $test_file . '.php') && is_dir(APP_PATH . 'Controller/' . $this->directory . $action[0])) {
+                $this->_setDirectory(array_shift($action), TRUE);
+                continue;
+            }
+
+            return implode('/', $action);
+        }
+
+        return $action;
+    }
+
+    /**
+     * @param string $directory
+     */
+    protected function _setDirectory(string $directory)
+    {
+        $this->directory .= str_replace('.', '', trim($directory, '/')) . '/';
     }
 }

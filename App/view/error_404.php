@@ -1,7 +1,7 @@
-<?php defined('CORE_PATH') OR exit('No direct script access allowed'); ?>
+<?php header("HTTP/1.0 404 Not File Found"); ?>
 <html>
 <head>
-    <title>Welcome TO GoMoney</title>
+    <title>404 Not Found</title>
     <style type="text/css">
         body {
             text-align: center;
@@ -14,8 +14,7 @@
         }
     </style>
 </head>
-
 <body>
-<h1>Welcome To GoMoney!</h1>
+<h1>404 Not Found</h1>
 </body>
 </html>

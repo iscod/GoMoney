@@ -9,17 +9,12 @@ class View
     /**
      * View constructor.
      * @param string $file_name
-     * @param array|NUll $arguments
+     * @param array $arguments
      */
-    public function __construct(string $file_name, array $arguments = NUll)
+    public function __construct(string $file_name, array $arguments = [])
     {
         $this->output($file_name, $arguments);
     }
-
-//    public function __destruct()
-//    {
-//        exit(0);
-//    }
 
     /**
      * @param $file_name
@@ -27,15 +22,18 @@ class View
      */
     private function output($file_name, $arguments)
     {
+        ob_start();
+
         if (file_exists(VIEW_PATH . $file_name . '.php')) {
-            extract($arguments, EXTR_PREFIX_SAME);
+            if($arguments) extract($arguments, EXTR_PREFIX_SAME);
             require_once VIEW_PATH . $file_name . '.php';
         } else {
             echo print_r($arguments);
         }
-        ob_start();
+
         $content = ob_get_contents();
         ob_end_clean();
         echo $content;
+        exit(0);
     }
 }

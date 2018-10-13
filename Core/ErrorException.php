@@ -70,10 +70,10 @@ class ErrorException extends \Exception
      */
     public static function show_error(int $type, string $message, string $file = '', int $line = 0, int $stats_code = 500)
     {
+
         if (is_cli()) {
             $template = strtolower(PHP_SAPI) . DIRECTORY_SEPARATOR . 'error.php';
         } else {
-//            set_status_header($status_code);
             $template = 'html' . DIRECTORY_SEPARATOR . 'error.php';
         }
 
