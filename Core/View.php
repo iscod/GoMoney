@@ -33,7 +33,9 @@ class View
 
         $content = ob_get_contents();
         ob_end_clean();
-        echo $content;
+        echo <<<EOT
+$content
+EOT;
         exit(0);
     }
 }
