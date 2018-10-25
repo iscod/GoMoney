@@ -2,6 +2,8 @@
 
 namespace GoMoney;
 
+use Throwable;
+
 defined('CORE_PATH') OR exit('No direct script access allowed');
 
 class ErrorException extends \Exception
@@ -31,6 +33,13 @@ class ErrorException extends \Exception
         E_DEPRECATED => 'E_DEPRECATED',//8192,
         E_USER_DEPRECATED => 'E_USER_DEPRECATED',//16384
     ];
+
+//    public function __construct(string $message = "", int $code = 0, Throwable $previous = null)
+//    {
+//        parent::__construct($message, $code, $previous);
+//        public static function show_error(int $type, string $message, string $file = '', int $line = 0, int $stats_code = 500)
+//        $this->show_500($this->error_type($code),$code, $message);
+//    }
 
     /**
      * @param int $type
@@ -79,7 +88,8 @@ class ErrorException extends \Exception
 
         ob_start();
         $type_name = self::get_type_name($type);
-        include trim(VIEW_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'error' . DIRECTORY_SEPARATOR . trim($template, DIRECTORY_SEPARATOR);
+
+        include CORE_PATH .  trim(VIEW_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'error' . DIRECTORY_SEPARATOR . trim($template, DIRECTORY_SEPARATOR);
         $buffer = ob_get_contents();
         ob_end_clean();
         echo $buffer;

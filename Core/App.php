@@ -47,17 +47,18 @@ if (!class_exists('App')) {
             return (new View($file, $param));
         }
 
-        public function run()
+        public function init()
         {
             if (!$this->route->class) {
                 $this->view('error_404');
             }
 
-            $class = trim(APP_PATH, '/') . '\\' . 'Controller' . '\\' . $this->route->class;
+            $class = basename(APP_PATH) . '\\' . 'Controller' . '\\' . $this->route->class;
 
             if (!class_exists($class)) {
                 $this->view('error_404');
             }
+
             $class = new $class();
             $offset = stripos($this->route->action, $this->route->class);
             if ($offset !== FALSE) {

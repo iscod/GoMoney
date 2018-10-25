@@ -1,32 +1,37 @@
 <?php
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . './../vendor/autoload.php';
 
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
+
+if (defined('ENV')) {
+    define('ENV', 'TEST');
+//    define('ENV', 'PRO');
+}
 
 /**
  * CORE DIRECTORY NAME
  * DEFAULT Core
  */
-$core_path = 'Core///';
+$core_path = '../Core';
 
 /**
  * APP DIRECTORY NAME
  * DEFAULT App
  */
-$app_path = 'App';
+$app_path = '../App';
 
 /**
  * VIEW DIRECTORY NAME
  * DEFAULT app/view'
  */
-$view_path = 'App/view';
+$view_path = '../App/view';
 
 /**
  * APP CONFIG DIRECTORY NAME
  * DEFAULT App/config
  */
-$config_path = 'App/config';
+$config_path = '../App/config';
 
 /**
  * SET TIME ZONE
@@ -36,7 +41,7 @@ $config_path = 'App/config';
 $time_zone = 'Asia/Shanghai';
 
 if (!defined('CORE_PATH')) {
-    define('CORE_PATH', trim($core_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
+    define('CORE_PATH', rtrim(__DIR__, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR .  trim($core_path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR);
 }
 
 date_default_timezone_set($time_zone);
@@ -63,8 +68,8 @@ if (!is_dir(CORE_PATH)) {
  * Load the global functions
  */
 
-if (file_exists(trim(CORE_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'Common.php')) {
-    require_once trim(CORE_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'Common.php';
+if (file_exists(rtrim(CORE_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'Common.php')) {
+    require_once rtrim(CORE_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'Common.php';
 }
 
 set_error_handler('_error_handler');
@@ -74,4 +79,4 @@ spl_autoload_register('_shutdown_handler');
  * Load GoMoney
  */
 $app = new GoMoney\App();
-$app->run();
+$app->init();

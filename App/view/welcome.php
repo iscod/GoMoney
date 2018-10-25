@@ -1,7 +1,7 @@
 <?php defined('CORE_PATH') OR exit('No direct script access allowed'); ?>
 <html>
 <head>
-    <title>Welcome TO GoMoney</title>
+    <title><?php echo $title ?></title>
     <style type="text/css">
         body {
             text-align: center;
@@ -14,8 +14,7 @@
         }
     </style>
 </head>
-
 <body>
-<h1>Welcome To GoMoney!</h1>
+<h1><?php echo $title ?></h1>
 </body>
 </html>
