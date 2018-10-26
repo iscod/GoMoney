@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true"
+         bootstrap="bootstrap.php"
+>
+    <testsuites>
+        <testsuite name="Stack">
+            <!--&lt;!&ndash;<directory>/path/to/*Test.php files</directory>&ndash;&gt;-->
+            <directory>../test/</directory>
+        </testsuite>
+    </testsuites>
+    <testsuites>
+        <testsuite name="Core">
+            <directory>../test/CoreTest/</directory>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist>
+            <directory suffix=".php">app/</directory>
+        </whitelist>
+    </filter>
+    <php>
+        <env name="ENV" value="test"/>
+    </php>
+</phpunit>
+

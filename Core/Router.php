@@ -47,11 +47,9 @@ class Router
      */
     public function __construct()
     {
-        if (file_exists(CONFIG_PATH . 'routes.php')) {
-            include CONFIG_PATH . 'routes.php';
-        }
-
-        $this->_parseRoutes();
+        $config = Config::load('route');
+        $this->_parseConfig($config);
+        $this->_parseRoute();
     }
 
     public function setClass(string $class)
@@ -112,46 +110,49 @@ class Router
 
     }
 
-    /**
-     * addRoute
-     * @return bool
-     */
-    public function addRoute()
+    public function _parseConfig($config)
     {
-        $this->action = $this->_validateAction($this->action);
-
-        if ($this->uri && $this->action) {
-            if (is_array($this->method)) {
-                foreach ($this->method as $verb) {
-                    $this->routes[$verb . $this->uri] = [
-                        'method' => $verb,
-                        'uri' => $this->uri,
-                        'action' => $this->action,
-                        'directory' => $this->directory
-                    ];
+        foreach ($config as $item) {
+            if (is_array($item['method'])) {
+                foreach ($item['method'] as $verb) {
+                    $this->addRoute($item['uri'], $item['action'], $verb);
                 }
             } else {
-                $this->routes[$this->method . $this->uri] = [
-                    'method' => $this->method,
-                    'uri' => $this->uri,
-                    'action' => $this->action,
-                    'directory' => $this->directory
-                ];
+                $this->addRoute($item['uri'], $item['action'], $item['method'] ?? '');
             }
         }
 
-        return TRUE;
+        return $this->routes;
     }
 
-    protected function _parseRoutes()
+    /**
+     * @param $uri
+     * @param $action
+     * @param string $method
+     * @return array
+     */
+    public function addRoute(string $uri, string $action, string $method = '')
+    {
+        if (!$method) $method = 'GET';
+        $this->routes[strtolower($method . $uri)] = [
+            'method' => $method,
+            'uri' => $uri,
+            'action' => $action
+        ];
+        return $this->routes;
+    }
+
+    protected function _parseRoute()
     {
         $uri = new Uri();
+
         $method = strtoupper($uri->getMethod());
         $uri = trim($uri->getUri(), '/');
+
         if ($uri === '') {
-            $this->route = $this->routes['default_route'];
+            $this->route = $this->routes[strtolower($method . 'default')];
         } else {
-            $this->route = $this->routes[$method . $uri] ?? '';
+            $this->route = $this->routes[strtolower($method . $uri)] ?? '';
         }
 
         $action = $this->route['action'] ?? '';
@@ -160,16 +161,6 @@ class Router
         $this->setClass($action[0] ?? '');
         $this->setAction($this->route['action'] ?? '');
         $this->setMethod($this->route['method'] ?? '');
-    }
-
-    public function addDefaultRoute()
-    {
-        $this->routes['default_route'] = [
-            'method' => $this->method,
-            'uri' => '',
-            'action' => $this->action,
-            'directory' => ''
-        ];
     }
 
     /**
@@ -185,7 +176,7 @@ class Router
         while ($c-- > 0) {
             $test_file = ucfirst($action[0]);
             if (!file_exists(APP_PATH . 'Controller/' . $test_file . '.php') && is_dir(APP_PATH . 'Controller/' . $this->directory . $action[0])) {
-                $this->_setDirectory(array_shift($action), TRUE);
+                array_shift($action);
                 continue;
             }
 

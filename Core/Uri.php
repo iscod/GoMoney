@@ -180,10 +180,10 @@ class Uri
      */
     protected function _parseMethod()
     {
-        $method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'CLI';
+        $method = isset($_SERVER['REQUEST_METHOD']) ? strtolower($_SERVER['REQUEST_METHOD']) : 'GET';
         $method = strtoupper($method);
         if (!in_array($method, ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'TRACE', 'CONNECT'])) {
-            $method = 'CLI';
+            $method = 'GET';
         }
 
         return $method;
