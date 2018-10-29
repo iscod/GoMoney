@@ -10,7 +10,8 @@ install:
   - composer
   - pecl
 before_script:
-  - sh -c "mysql -e 'create database IF NOT EXISTS GoMoney;'";
+  - sh -c "mysql -e 'create database IF NOT EXISTS test;'";
+  - sh -c "echo 'database=test' >> App/config/database.ini"
   - composer install
   - echo "extension=redis.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
   - echo "extension=memcached.so" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini

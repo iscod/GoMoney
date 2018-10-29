@@ -1,21 +1,21 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: ning
- * Date: 18/9/7
- * Time: 下午8:39
+ * Create a curl helper
+ * where are cacErt ? @link http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/
  */
 
 namespace App\Helper;
 
+use GoMoney\ErrorException;
+
 class ApiHandler
 {
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
     static function get(string $url, array $params = [], string $cacErt = '')
     {
@@ -23,12 +23,11 @@ class ApiHandler
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
-     * @param string $input_charset
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
     static function post(string $url, array $params = [], string $cacErt = '')
     {
@@ -36,11 +35,11 @@ class ApiHandler
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
     static function put(string $url, array $params, string $cacErt = '')
     {
@@ -48,13 +47,13 @@ class ApiHandler
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @param bool $is_post
      * @param bool $is_put
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
     private static function _do_request(string $url, array $params, string $cacErt = '', $is_post = false, $is_put = false)
     {
@@ -80,7 +79,7 @@ class ApiHandler
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);//SSL证书认证
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);//严格认证
 
-        if($cacErt) {
+        if ($cacErt) {
             curl_setopt($ch, CURLOPT_CAINFO, $cacErt);//证书地址    
         }
 
@@ -97,7 +96,7 @@ class ApiHandler
         $output = curl_exec($ch);
         if ($output === FALSE) {
             // error log
-            throw new SystemException("cURL Error: " . curl_error($ch), SystemCodes::SYSTEM_CURL_ERROR);
+            throw new ErrorException("cURL Error: " . curl_error($ch), curl_errno($ch));
         }
 
         curl_close($ch);

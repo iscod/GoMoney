@@ -27,11 +27,13 @@ class ExampleTest extends TestCase
 
 //    /**
 //     * @depends testApp
-//     * @param object $app
+//     * @param APP $app
+//     * @throws Exception
 //     */
-//    public function testAppIndex(object $app){
+//    public function testAppIndex(APP $app)
+//    {
 //        $string = $app->init();
-//        $this->assertStringEndsWith( $string, '</html>');
+//        $this->assertStringEndsWith($string, '</html>');
 //    }
 
     public function testInput()

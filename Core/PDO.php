@@ -9,8 +9,8 @@ class PDO extends \PDO
 {
 
     private $dbh = NULL;
-    private $config = NULL;
-    public $table_name = '';
+    public static $db = NULL;
+    public static $table = NULL;
 
     /**
      * PDO constructor.
@@ -29,11 +29,12 @@ class PDO extends \PDO
             }
 
             if (empty($config['dsn'])) {
-                $config['dsn'] = $config['driver'] . ':host=' . $config['host'] . ((!empty($config['port'])) ? (';port=' . $config['port']) : '') . ';dbname=' . $config['database'];
+                $config['dsn'] = ($config['driver'] ?? 'mysql') . ':host=' . ($config['host'] ?? 'localhost') . ((!empty($config['port'])) ? (';port=' . $config['port']) : '') . ';dbname=' . ($config['database'] ?? '');
             }
 
             try {
-                $this->dbh = new \PDO($config['dsn'], $config['username'], $config['password'], array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8', PDO::ATTR_PERSISTENT => true));
+                self::$db = $database;
+                $this->dbh = new \PDO($config['dsn'], $config['username'] ?? 'root', $config['password'] ?? '', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8', PDO::ATTR_PERSISTENT => true));
 
             } catch (\PDOException $e) {
                 throw new ErrorException($e->getMessage(), $e->getCode());
@@ -46,13 +47,12 @@ class PDO extends \PDO
         $this->dbh = null;
     }
 
-
-///    public static function __callStatic($method, $arguments)
-////    {
-////        call_user_func_array(array(self::connect(), $method), $arguments)
-////    }
-
-    static function connect($db = NULL)
+    /**
+     * @param null $db
+     * @return PDO
+     * @throws ErrorException
+     */
+    public static function connect($db = NULL)
     {
         try {
             return new self($db);
@@ -61,37 +61,59 @@ class PDO extends \PDO
         }
     }
 
+    /**
+     * @param $method
+     * @param $arguments
+     * @return mixed|null
+     */
     public function __call($method, $arguments)
     {
         $methods = get_class_methods(get_class($this));
         if (in_array($method, $methods)) {
             return call_user_func_array([$this, $method], $arguments);
+        } else {
+            return NULL;
+        }
+
+    }
+
+    /**
+     * @param string $table
+     * @param null $db
+     * @return PDO
+     * @throws ErrorException
+     */
+    public static function table(string $table = '', $db = NULL)
+    {
+        self::$table = $table;
+        if (self::$db == NULL) {
+            return self::connect($db);
+        } else {
+            return self::connect(self::$db);
         }
     }
 
-
-    public function table(string $table_name = '')
+    public function exec($statement)
     {
-        $this->table_name = $table_name;
-        return $table_name;
+        return $this->dbh->exec($statement);
     }
 
-    private function _getParamMark($data)
-    {
-        return ":" . implode(", :", array_keys($data)) . "";
-    }
-
-    private function _getColumn($data)
-    {
-        return "`" . implode("`, `", array_keys($data)) . "`";
-    }
-
-    private function _getExecParam($data)
-    {
-        $keys = ':' . implode(',:', array_keys($data));
-        $param_key = explode(',', $keys);
-        return array_combine($param_key, array_values($data));
-    }
+//    private function _getParamMark($data)
+//    {
+//        return ":" . implode(", :", array_keys($data)) . "";
+//    }
+//
+//    private function _getColumn($data)
+//    {
+//        return "`" . implode("`, `", array_keys($data)) . "`";
+//    }
+//
+//    private function _getExecParam($data)
+//    {
+//        $keys = ':' . implode(',:', array_keys($data));
+//        $param_key = explode(',', $keys);
+//        return array_combine($param_key, array_values($data));
+//    }
 
     public function close()
     {
@@ -100,7 +122,7 @@ class PDO extends \PDO
 
     /**
      * @param array $data
-     * @return bool|string
+     * @return bool|int|string
      */
     public function insert(array $data = [])
     {
@@ -110,9 +132,8 @@ class PDO extends \PDO
         $column = "`" . implode("`, `", array_keys($data)) . "`";
         $param_mark = ":" . implode(", :", array_keys($data)) . "";
 
-        $this->table_name = "test";
         $data = array_combine($param_key, array_values($data));
-        $sql = 'INSERT INTO ' . $this->table_name . ' (' . $column . ')' . ' VALUES ' . '(' . $param_mark . ')';
+        $sql = 'INSERT INTO ' . self::$table . ' (' . $column . ')' . ' VALUES ' . '(' . $param_mark . ')';
         try {
             $this->dbh->beginTransaction();
             $rs = $this->dbh->prepare($sql);
@@ -123,6 +144,13 @@ class PDO extends \PDO
         } catch (\PDOException $e) {
             $this->dbh->rollBack();
         }
+
+        return 0;
+    }
+
+    public function update(array $data = [])
+    {
+
     }
 
     /**
