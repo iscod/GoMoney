@@ -1,64 +1,91 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: ning
- * Date: 18/9/7
- * Time: 下午8:39
+ * Create a curl helper
+ * where are cacErt ? @link http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/
  */
 
 namespace App\Helper;
 
+use GoMoney\ErrorException;
+
 class ApiHandler
 {
-    /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
-     * @return mixed
-     * @throws SystemException
-     */
-    static function get(string $url, array $params = [], string $cacErt = '')
+    private $header = '';
+    private $cookie = '';
+    private $optHeader = 0;
+    private $method = 'GET';
+
+    public static function getStatic()
     {
-        return self::_do_request($url, $params, $cacErt, false);
+        return new self();
+    }
+
+    public function setHeader(string $header)
+    {
+        $this->header = $header;
+        return $this;
+    }
+
+    public function setCookie($cookie)
+    {
+        $this->cookie = $cookie;
+        return $this;
+    }
+
+    public function setOptHeader(bool $optHeader)
+    {
+        $this->optHeader = boolval($optHeader);
+        return $this;
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
-     * @param string $input_charset
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
-    static function post(string $url, array $params = [], string $cacErt = '')
+    public function get(string $url, array $params = [], string $cacErt = '')
     {
-        return self::_do_request($url, $params, $cacErt, true, false);
+        return $this->_do_request($url, $params, $cacErt, false);
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
-    static function put(string $url, array $params, string $cacErt = '')
+    public function post(string $url, array $params = [], string $cacErt = '')
     {
-        return self::_do_request($url, $params, $cacErt, false, true);
+        return $this->_do_request($url, $params, $cacErt, true, false);
     }
 
     /**
-     * @param $url
-     * @param $params
-     * @param $cacErt
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
+     * @return mixed
+     * @throws ErrorException
+     */
+    public function put(string $url, array $params, string $cacErt = '')
+    {
+        return $this->_do_request($url, $params, $cacErt, false, true);
+    }
+
+    /**
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
      * @param bool $is_post
      * @param bool $is_put
      * @return mixed
-     * @throws SystemException
+     * @throws ErrorException
      */
-    private static function _do_request(string $url, array $params, string $cacErt = '', $is_post = false, $is_put = false)
+    private function _do_request(string $url, array $params, string $cacErt = '', $is_post = false, $is_put = false)
     {
-        if (!$is_post) {
+        if ($this->method !== 'POST') {
             if ($params) {
                 $p_str = '';
                 $comma = '';
@@ -73,23 +100,27 @@ class ApiHandler
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, 0); // 过滤HTTP头
+        curl_setopt($ch, CURLOPT_HEADER, $this->optHeader); // 过滤HTTP头
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);// 显示输出结果
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);//SSL证书认证
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);//严格认证
 
-        if($cacErt) {
-            curl_setopt($ch, CURLOPT_CAINFO, $cacErt);//证书地址    
+        if ($this->cookie) {
+            curl_setopt($ch, CURLOPT_COOKIE, $this->cookie);
         }
 
-        if ($is_post) {
+        if ($cacErt) {
+            curl_setopt($ch, CURLOPT_CAINFO, $cacErt);//证书地址
+        }
+
+        if ($this->method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true); // post传输数据
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));// post传输数据
         }
 
-        if ($is_put) {
+        if ($this->method == 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
         }
@@ -97,7 +128,7 @@ class ApiHandler
         $output = curl_exec($ch);
         if ($output === FALSE) {
             // error log
-            throw new SystemException("cURL Error: " . curl_error($ch), SystemCodes::SYSTEM_CURL_ERROR);
+            throw new ErrorException("cURL Error: " . curl_error($ch), curl_errno($ch));
         }
 
         curl_close($ch);

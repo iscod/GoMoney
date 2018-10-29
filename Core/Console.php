@@ -22,5 +22,6 @@ class Console
     public function init()
     {
         $argv = InPut::argv();
+        var_dump($argv);
     }
 }
