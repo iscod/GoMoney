@@ -10,16 +10,32 @@ use GoMoney\ErrorException;
 
 class ApiHandler
 {
-    /**
-     * @param string $url
-     * @param array $params
-     * @param string $cacErt
-     * @return mixed
-     * @throws ErrorException
-     */
-    static function get(string $url, array $params = [], string $cacErt = '')
+    private $header = '';
+    private $cookie = '';
+    private $optHeader = 0;
+    private $method = 'GET';
+
+    public static function getStatic()
     {
-        return self::_do_request($url, $params, $cacErt, false);
+        return new self();
+    }
+
+    public function setHeader(string $header)
+    {
+        $this->header = $header;
+        return $this;
+    }
+
+    public function setCookie($cookie)
+    {
+        $this->cookie = $cookie;
+        return $this;
+    }
+
+    public function setOptHeader(bool $optHeader)
+    {
+        $this->optHeader = boolval($optHeader);
+        return $this;
     }
 
     /**
@@ -29,9 +45,9 @@ class ApiHandler
      * @return mixed
      * @throws ErrorException
      */
-    static function post(string $url, array $params = [], string $cacErt = '')
+    public function get(string $url, array $params = [], string $cacErt = '')
     {
-        return self::_do_request($url, $params, $cacErt, true, false);
+        return $this->_do_request($url, $params, $cacErt, false);
     }
 
     /**
@@ -41,9 +57,21 @@ class ApiHandler
      * @return mixed
      * @throws ErrorException
      */
-    static function put(string $url, array $params, string $cacErt = '')
+    public function post(string $url, array $params = [], string $cacErt = '')
     {
-        return self::_do_request($url, $params, $cacErt, false, true);
+        return $this->_do_request($url, $params, $cacErt, true, false);
+    }
+
+    /**
+     * @param string $url
+     * @param array $params
+     * @param string $cacErt
+     * @return mixed
+     * @throws ErrorException
+     */
+    public function put(string $url, array $params, string $cacErt = '')
+    {
+        return $this->_do_request($url, $params, $cacErt, false, true);
     }
 
     /**
@@ -55,9 +83,9 @@ class ApiHandler
      * @return mixed
      * @throws ErrorException
      */
-    private static function _do_request(string $url, array $params, string $cacErt = '', $is_post = false, $is_put = false)
+    private function _do_request(string $url, array $params, string $cacErt = '', $is_post = false, $is_put = false)
     {
-        if (!$is_post) {
+        if ($this->method !== 'POST') {
             if ($params) {
                 $p_str = '';
                 $comma = '';
@@ -72,23 +100,27 @@ class ApiHandler
 
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HEADER, 0); // 过滤HTTP头
+        curl_setopt($ch, CURLOPT_HEADER, $this->optHeader); // 过滤HTTP头
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);// 显示输出结果
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);//SSL证书认证
         curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);//严格认证
 
-        if ($cacErt) {
-            curl_setopt($ch, CURLOPT_CAINFO, $cacErt);//证书地址    
+        if ($this->cookie) {
+            curl_setopt($ch, CURLOPT_COOKIE, $this->cookie);
         }
 
-        if ($is_post) {
+        if ($cacErt) {
+            curl_setopt($ch, CURLOPT_CAINFO, $cacErt);//证书地址
+        }
+
+        if ($this->method === 'POST') {
             curl_setopt($ch, CURLOPT_POST, true); // post传输数据
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));// post传输数据
         }
 
-        if ($is_put) {
+        if ($this->method == 'PUT') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
             curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($params));
         }
