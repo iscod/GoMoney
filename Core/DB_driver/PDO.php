@@ -1,31 +1,70 @@
 <?php
 
-namespace GoMoney;
+namespace GoMoney\DB_driver;
 
 /**
- *
+ * Class PDO
+ * @package GoMoney
  */
 class PDO extends \PDO
 {
 
     private $dbh = NULL;
-    public static $db = NULL;
-    public static $table = NULL;
+    public $database = NULL;
+    public $table = NULL;
+    public $config = NULL;
 
     /**
      * PDO constructor.
-     * @param string|NULL $database
+     * @param array|NULL $config
+     */
+    public function __construct(array $config = NULL)
+    {
+        $this->config = $config;
+    }
+
+    public function __destruct()
+    {
+        $this->close();
+    }
+
+    /**
+     * @param null $database
+     * @return $this
      * @throws ErrorException
      */
-    public function __construct(string $database = NULL)
+    public function connect($database = NULL)
+    {
+        $this->database = $database;
+        $this->getConnect();
+        return $this;
+    }
+
+    /**
+     * @param string $table
+     * @param null $database
+     * @return $this
+     * @throws ErrorException
+     */
+    public function table(string $table = '', $database = NULL)
+    {
+        $this->table = $table;
+        if ($database != NULL) $this->database = $database;
+        $this->getConnect();
+        return $this;
+    }
+
+    /**
+     * @throws ErrorException
+     */
+    private function getConnect()
     {
         if (!$this->dbh) {
-            $config = Config::load('database');
-
-            if ($database === NULL || ($database && array_key_exists($database, $config))) {
-                $config = $database ? $config[$database] : $config;
+            $config = $this->config;
+            if ($this->database === NULL || ($this->database && array_key_exists($this->database, $config))) {
+                $config = $this->database ? $config[$this->database] : $config;
             } else {
-                throw new ErrorException('Undefined DB ' . $database . ' Config');
+                throw new ErrorException('Undefined DB ' . $this->database . ' Config');
             }
 
             if (empty($config['dsn'])) {
@@ -33,31 +72,10 @@ class PDO extends \PDO
             }
 
             try {
-                self::$db = $database;
                 $this->dbh = new \PDO($config['dsn'], $config['username'] ?? 'root', $config['password'] ?? '', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES UTF8', PDO::ATTR_PERSISTENT => true));
-
             } catch (\PDOException $e) {
                 throw new ErrorException($e->getMessage(), $e->getCode());
             }
-        }
-    }
-
-    public function __destruct()
-    {
-        $this->dbh = null;
-    }
-
-    /**
-     * @param null $db
-     * @return PDO
-     * @throws ErrorException
-     */
-    public static function connect($db = NULL)
-    {
-        try {
-            return new self($db);
-        } catch (\PDOException $e) {
-            throw new ErrorException($e->getCode(), $e->getMessage());
         }
     }
 
@@ -78,42 +96,18 @@ class PDO extends \PDO
     }
 
     /**
-     * @param string $table
-     * @param null $db
-     * @return PDO
-     * @throws ErrorException
+     * @param string $statement
+     * @return int|mixed
      */
-    public static function table(string $table = '', $db = NULL)
-    {
-        self::$table = $table;
-        if (self::$db == NULL) {
-            return self::connect($db);
-        } else {
-            return self::connect(self::$db);
-        }
-    }
-
     public function exec($statement)
     {
         return $this->dbh->exec($statement);
     }
 
-//    private function _getParamMark($data)
-//    {
-//        return ":" . implode(", :", array_keys($data)) . "";
-//    }
-//
-//    private function _getColumn($data)
-//    {
-//        return "`" . implode("`, `", array_keys($data)) . "`";
-//    }
-//
-//    private function _getExecParam($data)
-//    {
-//        $keys = ':' . implode(',:', array_keys($data));
-//        $param_key = explode(',', $keys);
-//        return array_combine($param_key, array_values($data));
-//    }
+    public function where(array $data = [])
+    {
+
+    }
 
     public function close()
     {
@@ -122,7 +116,7 @@ class PDO extends \PDO
 
     /**
      * @param array $data
-     * @return bool|int|string
+     * @return bool|int
      */
     public function insert(array $data = [])
     {
@@ -133,7 +127,7 @@ class PDO extends \PDO
         $param_mark = ":" . implode(", :", array_keys($data)) . "";
 
         $data = array_combine($param_key, array_values($data));
-        $sql = 'INSERT INTO ' . self::$table . ' (' . $column . ')' . ' VALUES ' . '(' . $param_mark . ')';
+        $sql = 'INSERT INTO ' . $this->table . ' (' . $column . ')' . ' VALUES ' . '(' . $param_mark . ')';
         try {
             $this->dbh->beginTransaction();
             $rs = $this->dbh->prepare($sql);
@@ -148,6 +142,9 @@ class PDO extends \PDO
         return 0;
     }
 
+    /**
+     * @param array $data
+     */
     public function update(array $data = [])
     {
 
@@ -158,7 +155,7 @@ class PDO extends \PDO
      * @param int $mode
      * @param null $arg3
      * @param array $ctorargs
-     * @return array|\PDOStatement
+     * @return mixed|\PDOStatement
      */
     public function query($statement, $mode = \PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
     {
