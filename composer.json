@@ -1,7 +1,8 @@
 {
   "name": "GoMoney",
   "require": {
-    "php": ">=7.0.0"
+    "php": ">=7.0.0",
+    "psr/log": ">=1.0"
   },
   "autoload": {
     "psr-4": {
