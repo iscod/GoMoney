@@ -12,4 +12,3 @@ Open PHP Framework
 git clone https://github.com/IsCod/GoMoney.git
 composer install
 ```
----
