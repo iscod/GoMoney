@@ -132,7 +132,7 @@ $db = DB::table('tablename', 'dbname');
 ## insert
 
 ```php
-$id = DB::table('dbname')->table('tablename')->insert(['a'=>'a']);
+$id = DB::connect('dbname')->table('tablename')->insert(['a'=>'a']);
 ```
 
 ## where
