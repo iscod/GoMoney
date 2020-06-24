@@ -184,3 +184,8 @@ exec for SQL statement
 ```php
 $db = DB::connect('dbname')->exec('SHOW TABLES');
 ``` 
+
+# Todo
+
+1, Route use registered
+2, Error manage
