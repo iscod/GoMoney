@@ -23,8 +23,7 @@ class DB
 
     private static function getConfig()
     {
-        $config = Config::load('database');
-        return $config;
+        return Config::load(strtolower(__CLASS__));
     }
 
     public static function __callStatic($name, $arguments)

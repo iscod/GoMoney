@@ -47,7 +47,7 @@ class Router
      */
     public function __construct()
     {
-        $config = Config::load('router');
+        $config = Config::load(strtolower(__CLASS__));
         $this->_parseConfig($config);
         $this->_parseRoute();
     }
