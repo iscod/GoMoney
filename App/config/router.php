@@ -14,3 +14,5 @@ $array[] = array(
     'view' => 'index',
     'method' => 'POST',
 );
+
+return $array;

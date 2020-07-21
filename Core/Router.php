@@ -47,7 +47,7 @@ class Router
      */
     public function __construct()
     {
-        $config = Config::load(strtolower(__CLASS__));
+        $config = Config::load('router');
         $this->_parseConfig($config);
         $this->_parseRoute();
     }
@@ -131,9 +131,8 @@ class Router
      * @param string $method
      * @return array
      */
-    public function addRoute(string $uri, string $action, string $method = '')
+    public function addRoute(string $uri, string $action, string $method = 'GET')
     {
-        if (!$method) $method = 'GET';
         $this->routes[strtolower($method . $uri)] = [
             'method' => $method,
             'uri' => $uri,

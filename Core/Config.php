@@ -22,7 +22,6 @@ class Config
                 }
             }
         }
-
         if (isset($retData)) {
             return $retData;
         } else {
