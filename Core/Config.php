@@ -14,15 +14,17 @@ class Config
     public static function load($file)
     {
         foreach ([CORE_PATH . CONFIG_PATH, CONFIG_PATH] as $path) {
-            $ini = ltrim($path, 'DIRECTORY_SEPARATOR') . DIRECTORY_SEPARATOR . $file . '.ini';
-            if (is_file($ini)) {
-                $pare = parse_ini_file($ini, TRUE);
-
+            $filename = ltrim($path, 'DIRECTORY_SEPARATOR') . DIRECTORY_SEPARATOR . $file . '.php';
+            if (is_file($filename)) {
+                $retData = include $filename;
+                if (empty($retData)) {
+                    trigger_error(__CLASS__ . ": $filename no return data");
+                }
             }
         }
 
-        if (isset($pare)) {
-            return $pare;
+        if (isset($retData)) {
+            return $retData;
         } else {
             throw new ErrorException('Not Config File ' . $file . '.php!');
         }

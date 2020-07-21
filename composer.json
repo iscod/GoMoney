@@ -1,5 +1,5 @@
 {
-  "name": "GoMoney",
+  "name": "iscod/gomoney",
   "require": {
     "php": ">=7.0.0"
   },

@@ -68,8 +68,7 @@ if (!class_exists('App')) {
             }
 
             if (in_array($function, get_class_methods($class))) {
-                $return = call_user_func_array([$class, $function], is_array($this->uri->getArgs()) ? $this->uri->getArgs() : []);
-                return $return;
+                return call_user_func_array([$class, $function], is_array($this->uri->getArgs()) ? $this->uri->getArgs() : []);
             } else {
                 $this->view('error_404');
             }
