@@ -68,6 +68,12 @@ class Router
         return $this;
     }
 
+    public function setDirectory($directory)
+    {
+        $this->directory = $directory;
+        return $this;
+    }
+
     /**
      * @param string $uri
      * @return $this
@@ -115,10 +121,10 @@ class Router
         foreach ($config as $item) {
             if (is_array($item['method'])) {
                 foreach ($item['method'] as $verb) {
-                    $this->addRoute($item['uri'], $item['action'], $verb);
+                    $this->addRoute($item['uri'], $item['controller'], $item['directory'], $item['view'], $verb);
                 }
             } else {
-                $this->addRoute($item['uri'], $item['action'], $item['method'] ?? '');
+                $this->addRoute($item['uri'], $item['controller'], $item['directory'], $item['view']);
             }
         }
 
@@ -131,12 +137,14 @@ class Router
      * @param string $method
      * @return array
      */
-    public function addRoute(string $uri, string $action, string $method = 'GET')
+    public function addRoute(string $uri, string $controller, string $directory, string $view, string $method = 'GET')
     {
         $this->routes[strtolower($method . $uri)] = [
             'method' => $method,
             'uri' => $uri,
-            'action' => $action
+            'controller' => $controller,
+            'directory' => $directory,
+            'view' => $view,
         ];
         return $this->routes;
     }
@@ -157,8 +165,9 @@ class Router
         $action = $this->route['action'] ?? '';
         $action = explode('/', trim($action, '/'));
         $this->setUri($this->route['uri'] ?? '');
-        $this->setClass($action[0] ?? '');
-        $this->setAction($this->route['action'] ?? '');
+        $this->setDirectory($this->route['directory'] ?? '');
+        $this->setClass($this->route['controller'] ?? '');
+        $this->setAction($this->route['view'] ?? '');
         $this->setMethod($this->route['method'] ?? '');
     }
 

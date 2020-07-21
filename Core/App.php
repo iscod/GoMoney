@@ -53,7 +53,7 @@ if (!class_exists('App')) {
                 $this->view('error_404');
             }
 
-            $class = basename(APP_PATH) . '\\' . 'Controller' . '\\' . $this->route->class;
+            $class = basename(APP_PATH) . '\\' . 'Controller' . '\\' . $this->route->directory . '\\' . $this->route->class;
 
             if (!class_exists($class)) {
                 $this->view('error_404');
